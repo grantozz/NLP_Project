@@ -41,7 +41,13 @@ class Vocabulary:
     
     def __contains__(self, item):
         return item in self.w2idx
-    
+        
+    def convert_to_list(self):
+        l = []
+        for i in range(len(self.idx2w)):
+            l.append(self.idx2w[i])
+        return l
+
     def __getitem__(self, item):
         if isinstance(item, str):
             return self.w2idx[item]
