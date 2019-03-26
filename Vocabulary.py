@@ -4,17 +4,27 @@ from collections import defaultdict
 import string
 class Vocabulary:
     def __init__(self, special_tokens=None):
+        self.unk_count = 0
+        self.total_token_count = 0
         self.w2idx = {}
         self.idx2w = {}
         self.w2cnt = defaultdict(int)
         self.special_tokens = special_tokens
         if self.special_tokens is not None:
             self.add_tokens(special_tokens)
-        
+
+    def unk_ratio(self):
+        return f'{self.unk_count}/{self.total_token_count}({(self.unk_count/self.total_token_count)*100:.3f} %)'
+
     def get_sentence(self,sentence):
         id_list = []
         for word in sentence:
-            id_list.append(self[word])
+            try:
+                self.total_token_count += 1 
+                id_list.append(self[word])
+            except KeyError:
+                self.unk_count+=1
+                id_list.append(self['<UNK>'])
         return id_list
 
     def add_tokens(self, tokens):
