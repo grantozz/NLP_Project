@@ -2,12 +2,15 @@
 # coding: utf-8
 
 import torch
+
 from torch.autograd import Variable
 from torch.utils.data import Dataset, DataLoader
 import sys
 from skipthoughts import UniSkip,BiSkip
 import pandas as pd
 from Vocabulary import Vocabulary, preprocess
+import torch.optim as optim
+from model import Net
 
 dir_st = 'data/skip-thoughts'
 sys.path.append('skip-thoughts.torch/pytorch')
@@ -79,7 +82,7 @@ class LastSentenceDataset(Dataset):
        
     def make_data(self):
         data = []
-        total = self.df.index[:200]
+        total = self.df.index[:100]
         print('skip thought encoding dataset')
         for i in total:
             #print(row['RandomFifthSentenceQuiz1'],row['RandomFifthSentenceQuiz2'])
@@ -87,11 +90,11 @@ class LastSentenceDataset(Dataset):
             self.progress(i,len(total))
             endings =  self.gen_embbeding(self.df.at[i,'RandomFifthSentenceQuiz1'], self.df.at[i,'RandomFifthSentenceQuiz2'])
             if self.df.at[i,'AnswerRightEnding'] == 1:
-                data.append((endings[0],1))
-                data.append((endings[1],0))
+                data.append((endings[0],torch.tensor([1])))
+                data.append((endings[1],torch.tensor([0])))
             else:
-                data.append((endings[0],0))
-                data.append((endings[1],1))
+                data.append((endings[0],torch.tensor([0])))
+                data.append((endings[1],torch.tensor([1])))
         print(f'\n{self.vocab.unk_ratio()} ids generated were replaced with <UNK>')
         return data
     
@@ -140,9 +143,38 @@ if __name__ == "__main__":
     val_data_set= LastSentenceDataset()
     print('train 1',val_data_set[0])
 
+    net = Net()
+    #exit beacuse the training loop is broken
+    sys.exit()
 
+    criterion = torch.nn.CrossEntropyLoss()
+    optimizer = optim.SGD(net.parameters(), lr=0.001, momentum=0.9)
+    
+    running_loss = 0.0
+    for i, data in enumerate(val_data_set, 0):
+       # get the inputs
+        inputs, labels = data
+        print(inputs,labels)
 
+        # zero the parameter gradients
+        optimizer.zero_grad()
 
-    #test_data_set = LastSentenceDataset(file='story_cloze_data/cloze_test_test__spring2016 - cloze_test_ALL_test.csv',vocab=val_data_set.vocab)
-    #print('test 1',test_data_set[0])
+        outputs = net(inputs)
+           
+        print('out',outputs,labels)
+        #TODO Fix this 
+        # posible solution https://github.com/pytorch/pytorch/issues/5554
+        loss = criterion(outputs, labels)
+        loss.backward()
+        optimizer.step()
+
+        # print statistics
+        running_loss += loss.item()
+        if i % 2000 == 1999:    # print every 2000 mini-batches
+            print('[%d, %5d] loss: %.3f' %
+                (epoch + 1, i + 1, running_loss / 2000))
+            running_loss = 0.0
+
+        print('Finished Training')
+
 
