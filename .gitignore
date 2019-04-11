@@ -1,4 +1,5 @@
 saved_models/*
+!saved_models/.gitkeep
 data/
 env/
 .ipynb_checkpoints/
