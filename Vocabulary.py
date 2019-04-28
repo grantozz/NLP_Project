@@ -1,20 +1,21 @@
 
 from nltk import word_tokenize
 from collections import defaultdict
+from collections import OrderedDict
 import string
 class Vocabulary:
     def __init__(self, special_tokens=None):
         self.unk_count = 0
         self.total_token_count = 0
-        self.w2idx = {}
-        self.idx2w = {}
+        self.w2idx = OrderedDict()
+        self.idx2w = OrderedDict()
         self.w2cnt = defaultdict(int)
         self.special_tokens = special_tokens
         if self.special_tokens is not None:
             self.add_tokens(special_tokens)
 
     def unk_ratio(self):
-        return f'{self.unk_count}/{self.total_token_count}({(self.unk_count/self.total_token_count)*100:.3f} %)'
+        return f'{self.unk_count}  out of {self.total_token_count} ids generated were for unk({(self.unk_count/self.total_token_count)*100:.3f} %)'
 
     def get_sentence(self,sentence):
         id_list = []
